@@ -1,0 +1,36 @@
+services:
+  validator-a:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock
+    container_name: vid-mock-a
+    hostname: validator-a
+    ports:
+      - "2201:22"
+    volumes:
+      - ./authorized_keys:/authorized_keys:ro
+      - ledger-a:/home/sol/ledger
+    networks:
+      - vid-net
+
+  validator-b:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock
+    container_name: vid-mock-b
+    hostname: validator-b
+    ports:
+      - "2202:22"
+    volumes:
+      - ./authorized_keys:/authorized_keys:ro
+      - ledger-b:/home/sol/ledger
+    networks:
+      - vid-net
+
+networks:
+  vid-net:
+    driver: bridge
+
+volumes:
+  ledger-a:
+  ledger-b:
