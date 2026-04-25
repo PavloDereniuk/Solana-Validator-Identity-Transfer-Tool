@@ -9,3 +9,6 @@ dist/
 tower-*.bin
 *.json.key
 *.swp
+notes/
+drafts/
+_*.md
