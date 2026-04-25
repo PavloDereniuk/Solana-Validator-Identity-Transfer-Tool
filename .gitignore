@@ -12,3 +12,5 @@ tower-*.bin
 notes/
 drafts/
 _*.md
+**/authorized_keys
+**/.ssh/

@@ -1,0 +1,23 @@
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssh-server \
+    jq \
+    coreutils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -d /home/sol -s /bin/bash sol \
+    && mkdir -p /var/run/sshd /home/sol/.ssh /home/sol/ledger \
+    && chown -R sol:sol /home/sol \
+    && chmod 700 /home/sol/.ssh
+
+COPY mock/agave-validator /usr/local/bin/agave-validator
+COPY mock/solana          /usr/local/bin/solana
+COPY mock/solana-keygen   /usr/local/bin/solana-keygen
+RUN chmod +x /usr/local/bin/agave-validator /usr/local/bin/solana /usr/local/bin/solana-keygen
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 22
+ENTRYPOINT ["/entrypoint.sh"]
