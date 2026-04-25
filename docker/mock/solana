@@ -1,0 +1,48 @@
+#!/bin/bash
+# mock solana cli. enough surface for the transfer tool's preflight + verification.
+
+set -e
+
+CMD="${1:-}"
+shift || true
+
+case "$CMD" in
+    --version)
+        echo "solana-cli 2.1.0 (mock)"
+        ;;
+
+    address)
+        KF=""
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                -k|--keypair) KF="$2"; shift 2 ;;
+                *) shift ;;
+            esac
+        done
+        if [[ -z "$KF" || ! -f "$KF" ]]; then
+            echo "error: keypair file not found" >&2
+            exit 1
+        fi
+        # deterministic 'pubkey' derived from the file content. same alg used in solana-keygen pubkey.
+        sha256sum "$KF" | awk '{print substr($1, 1, 44)}'
+        ;;
+
+    catchup)
+        # always 0 slots behind in mock land
+        echo "0 slots behind ( vote 12345 / cluster 12345 )"
+        ;;
+
+    cluster-version)
+        echo "2.1.0"
+        ;;
+
+    validator-info)
+        # subcmd: get
+        echo '[]'
+        ;;
+
+    *)
+        echo "mock solana: unknown command: $CMD" >&2
+        exit 2
+        ;;
+esac

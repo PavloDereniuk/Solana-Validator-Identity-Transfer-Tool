@@ -1,0 +1,105 @@
+#!/bin/bash
+# mock agave-validator. covers the subcommands the transfer tool uses.
+# state lives in <ledger>/state.json; tower files are written/read on disk.
+
+set -e
+
+LEDGER=""
+SUB=""
+POS=()
+REQUIRE_TOWER=0
+MIN_IDLE=""
+SKIP_SNAPSHOT=0
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -l|--ledger)        LEDGER="$2"; shift 2 ;;
+        --version)          echo "agave-validator 2.1.0 (mock)"; exit 0 ;;
+        --require-tower)    REQUIRE_TOWER=1; shift ;;
+        --min-idle-time)    MIN_IDLE="$2"; shift 2 ;;
+        --skip-new-snapshot-check) SKIP_SNAPSHOT=1; shift ;;
+        wait-for-restart-window|set-identity|monitor|authorized-voter|exit)
+            SUB="$1"; shift ;;
+        *)                  POS+=("$1"); shift ;;
+    esac
+done
+
+if [[ -z "$LEDGER" ]]; then
+    echo "error: --ledger required" >&2
+    exit 1
+fi
+mkdir -p "$LEDGER"
+
+STATE="$LEDGER/state.json"
+[[ -f "$STATE" ]] || echo '{"identity":null,"voters":[]}' > "$STATE"
+
+# read identity from stdin or arg, return path to keyfile
+read_keyfile() {
+    if [[ -n "${POS[0]:-}" && -f "${POS[0]}" ]]; then
+        echo "${POS[0]}"
+    else
+        local tmp
+        tmp=$(mktemp)
+        cat > "$tmp"
+        echo "$tmp"
+    fi
+}
+
+case "$SUB" in
+    wait-for-restart-window)
+        echo "waiting for restart window (min-idle=${MIN_IDLE:-0})..."
+        sleep 1
+        echo "restart window reached"
+        ;;
+
+    set-identity)
+        KF=$(read_keyfile)
+        PUB=$(/usr/local/bin/solana address -k "$KF")
+        if [[ $REQUIRE_TOWER -eq 1 ]]; then
+            if [[ ! -f "$LEDGER/tower-1_9-${PUB}.bin" ]]; then
+                echo "error: tower file missing for $PUB, refusing to set identity" >&2
+                exit 1
+            fi
+        fi
+        jq --arg id "$PUB" '.identity = $id' "$STATE" > "$STATE.tmp" && mv "$STATE.tmp" "$STATE"
+        # write a tower for the new identity if there isn't one yet (so future restarts work)
+        [[ -f "$LEDGER/tower-1_9-${PUB}.bin" ]] || echo "mock-tower-$(date +%s)" > "$LEDGER/tower-1_9-${PUB}.bin"
+        echo "Identity set to $PUB"
+        ;;
+
+    authorized-voter)
+        ACTION="${POS[0]:-}"
+        case "$ACTION" in
+            add)
+                # remove 'add' from positional, rest are remaining args
+                unset 'POS[0]'
+                KF=$(read_keyfile)
+                PUB=$(/usr/local/bin/solana address -k "$KF")
+                jq --arg v "$PUB" '.voters += [$v] | .voters |= unique' "$STATE" > "$STATE.tmp" && mv "$STATE.tmp" "$STATE"
+                echo "authorized voter added: $PUB"
+                ;;
+            remove-all)
+                jq '.voters = []' "$STATE" > "$STATE.tmp" && mv "$STATE.tmp" "$STATE"
+                echo "all authorized voters removed"
+                ;;
+            *)
+                echo "unknown authorized-voter action: $ACTION" >&2
+                exit 2
+                ;;
+        esac
+        ;;
+
+    monitor)
+        ID=$(jq -r .identity "$STATE")
+        echo "validator running, slot 12345, identity ${ID:-none}"
+        ;;
+
+    exit)
+        echo "validator exit signaled"
+        ;;
+
+    *)
+        echo "mock agave-validator: unknown subcommand: $SUB" >&2
+        exit 2
+        ;;
+esac

@@ -1,0 +1,40 @@
+#!/bin/bash
+# mock solana-keygen. handles `new -o <path>` and `pubkey <path>`.
+
+set -e
+
+CMD="${1:-}"
+shift || true
+
+case "$CMD" in
+    new)
+        OUT=""
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                -o|--outfile) OUT="$2"; shift 2 ;;
+                *) shift ;;
+            esac
+        done
+        if [[ -z "$OUT" ]]; then
+            echo "error: -o is required" >&2
+            exit 1
+        fi
+        mkdir -p "$(dirname "$OUT")"
+        head -c 64 /dev/urandom | base64 -w0 > "$OUT"
+        echo "wrote new keypair to $OUT"
+        ;;
+
+    pubkey)
+        KF="${1:-}"
+        if [[ -z "$KF" || ! -f "$KF" ]]; then
+            echo "error: keypair file not found" >&2
+            exit 1
+        fi
+        sha256sum "$KF" | awk '{print substr($1, 1, 44)}'
+        ;;
+
+    *)
+        echo "mock solana-keygen: unknown: $CMD" >&2
+        exit 2
+        ;;
+esac
