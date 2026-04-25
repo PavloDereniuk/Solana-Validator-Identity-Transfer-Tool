@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+.env
+.env.*
+.DS_Store
+.idea/
+.vscode/
+tower-*.bin
+*.json.key
+*.swp

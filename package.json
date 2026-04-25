@@ -1,0 +1,27 @@
+{
+  "name": "solana-validator-identity-transfer-tool",
+  "version": "0.1.0",
+  "description": "Transfer staked Solana validator identity between two nodes safely.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "vid": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
