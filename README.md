@@ -22,3 +22,19 @@ This builds both images, generates a throwaway ssh keypair under
 - `validator-b` → `ssh -i docker/.ssh/id_ed25519 -p 2202 sol@localhost`
 
 Tear down with `docker compose -f docker/docker-compose.yml down -v`.
+
+### Try a swap end-to-end
+
+```
+bash docker/bootstrap.sh                                  # generates keypairs + initial tower
+node dist/cli.js swap --config docker/swap-config.example.json
+```
+
+The swap command runs the standard four-step flow:
+
+1. wait for restart window on the primary
+2. set the primary to an unstaked identity
+3. transfer the tower file from primary to secondary over sftp
+4. set the staked identity on the secondary with `--require-tower`
+
+Tower filenames follow `tower-1_9-{pubkey}.bin`, same as a real validator.
