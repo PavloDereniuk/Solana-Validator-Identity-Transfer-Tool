@@ -1,0 +1,20 @@
+{
+  "primary": {
+    "host": "localhost",
+    "port": 2201,
+    "user": "sol",
+    "key": "docker/.ssh/id_ed25519",
+    "ledger": "/home/sol/ledger"
+  },
+  "secondary": {
+    "host": "localhost",
+    "port": 2202,
+    "user": "sol",
+    "key": "docker/.ssh/id_ed25519",
+    "ledger": "/home/sol/ledger"
+  },
+  "identities": {
+    "staked": "/home/sol/staked.json",
+    "unstaked": "/home/sol/unstaked.json"
+  }
+}
