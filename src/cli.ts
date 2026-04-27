@@ -54,6 +54,8 @@ program
   .option('--no-rollback', 'disable post-swap catchup watcher and auto-rollback')
   .option('--catchup-timeout <sec>', 'how long to wait for the new node to catch up', String(DEFAULT_WATCH.timeoutMs / 1000))
   .option('--catchup-threshold <slots>', 'slots-behind threshold to count as caught up', String(DEFAULT_WATCH.slotThreshold))
+  .option('--skip-preflight', 'do not run preflight before the swap (not recommended)')
+  .option('--preflight-min-score <n>', 'minimum preflight score required to proceed', '90')
   .action(async (opts) => {
     const cfg = await loadConfig(opts.config);
 
@@ -63,6 +65,19 @@ program
     if (opts.dryRun) {
       console.log('dry-run: not yet wired up. coming soon.');
       return;
+    }
+
+    if (!opts.skipPreflight) {
+      console.log('running preflight...');
+      const report = await runChecks(buildSwapChecks(cfg));
+      printReport(report);
+      const minScore = Number(opts.preflightMinScore);
+      if (report.recommendation === 'no-go' || report.score < minScore) {
+        console.error(`\npreflight blocked: score ${report.score} < ${minScore} or recommendation=${report.recommendation}.`);
+        console.error('rerun with --skip-preflight to override (you should not).');
+        process.exit(1);
+      }
+      console.log('');
     }
 
     const audit = await Auditor.open(opts.auditLog, newSwapId());
