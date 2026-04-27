@@ -4,6 +4,8 @@ import { exec, type Target } from './core/ssh.js';
 import { setIdentity, waitForRestartWindow, getPubkey } from './core/validator.js';
 import { transferTower } from './core/tower.js';
 import { loadConfig, nodeToTarget } from './config.js';
+import { runChecks, type PreflightReport } from './core/preflight.js';
+import { buildSwapChecks } from './core/checks.js';
 
 const program = new Command();
 
@@ -22,9 +24,25 @@ program
 program
   .command('preflight')
   .description('run pre-swap safety checks')
-  .action(async () => {
-    console.log('preflight: not implemented yet');
+  .requiredOption('-c, --config <path>', 'swap config json')
+  .action(async (opts) => {
+    const cfg = await loadConfig(opts.config);
+    const report = await runChecks(buildSwapChecks(cfg));
+    printReport(report);
+    if (report.recommendation === 'no-go') process.exit(1);
   });
+
+function printReport(r: PreflightReport): void {
+  const symbol = (l: string) => (l === 'pass' ? 'ok ' : l === 'warn' ? 'warn' : 'FAIL');
+  for (const c of r.results) {
+    console.log(`  [${symbol(c.level)}] ${c.name.padEnd(28)} ${c.message}`);
+    if (c.detail && c.level !== 'pass') {
+      for (const line of c.detail.split('\n')) console.log(`         ${line}`);
+    }
+  }
+  console.log('');
+  console.log(`  score: ${r.score}/100   recommendation: ${r.recommendation.toUpperCase()}`);
+}
 
 program
   .command('swap')
