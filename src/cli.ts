@@ -2,11 +2,12 @@
 import { Command } from 'commander';
 import { exec, type Target } from './core/ssh.js';
 import { loadConfig, nodeToTarget } from './config.js';
-import { runChecks, type PreflightReport } from './core/preflight.js';
+import { runChecks } from './core/preflight.js';
 import { buildSwapChecks } from './core/checks.js';
 import { executeSwap } from './core/swap.js';
 import { Auditor, defaultAuditPath, newSwapId } from './core/audit.js';
 import { watchCatchup, DEFAULT_WATCH } from './core/rollback.js';
+import { formatPreflight } from './util/format.js';
 
 const program = new Command();
 
@@ -29,22 +30,9 @@ program
   .action(async (opts) => {
     const cfg = await loadConfig(opts.config);
     const report = await runChecks(buildSwapChecks(cfg));
-    printReport(report);
+    process.stdout.write(formatPreflight(report));
     if (report.recommendation === 'no-go') process.exit(1);
   });
-
-function printReport(r: PreflightReport): void {
-  const symbol = (l: string) => (l === 'pass' ? 'ok ' : l === 'warn' ? 'warn' : 'FAIL');
-  const widest = r.results.reduce((w, c) => Math.max(w, c.name.length), 0);
-  console.log('checks:');
-  for (const c of r.results) {
-    console.log(`  [${symbol(c.level)}] ${c.name.padEnd(widest)}   ${c.message}`);
-    if (c.detail && c.level !== 'pass') {
-      for (const line of c.detail.split('\n')) console.log(`         ${line}`);
-    }
-  }
-  console.log(`\nscore: ${r.score}/100   recommendation: ${r.recommendation.toUpperCase()}\n`);
-}
 
 program
   .command('swap')
@@ -71,14 +59,13 @@ program
     if (!opts.skipPreflight) {
       console.log('running preflight...');
       const report = await runChecks(buildSwapChecks(cfg));
-      printReport(report);
+      process.stdout.write(formatPreflight(report));
       const minScore = Number(opts.preflightMinScore);
       if (report.recommendation === 'no-go' || report.score < minScore) {
-        console.error(`\npreflight blocked: score ${report.score} < ${minScore} or recommendation=${report.recommendation}.`);
+        console.error(`preflight blocked: score ${report.score} < ${minScore} or recommendation=${report.recommendation}.`);
         console.error('rerun with --skip-preflight to override (you should not).');
         process.exit(1);
       }
-      console.log('');
     }
 
     const audit = await Auditor.open(opts.auditLog, newSwapId());
