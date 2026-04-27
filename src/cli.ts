@@ -35,14 +35,15 @@ program
 
 function printReport(r: PreflightReport): void {
   const symbol = (l: string) => (l === 'pass' ? 'ok ' : l === 'warn' ? 'warn' : 'FAIL');
+  const widest = r.results.reduce((w, c) => Math.max(w, c.name.length), 0);
+  console.log('checks:');
   for (const c of r.results) {
-    console.log(`  [${symbol(c.level)}] ${c.name.padEnd(28)} ${c.message}`);
+    console.log(`  [${symbol(c.level)}] ${c.name.padEnd(widest)}   ${c.message}`);
     if (c.detail && c.level !== 'pass') {
       for (const line of c.detail.split('\n')) console.log(`         ${line}`);
     }
   }
-  console.log('');
-  console.log(`  score: ${r.score}/100   recommendation: ${r.recommendation.toUpperCase()}`);
+  console.log(`\nscore: ${r.score}/100   recommendation: ${r.recommendation.toUpperCase()}\n`);
 }
 
 program
