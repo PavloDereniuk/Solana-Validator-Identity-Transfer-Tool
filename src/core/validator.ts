@@ -10,11 +10,15 @@ export type WaitOpts = {
   skipSnapshotCheck?: boolean;
 };
 
-export async function waitForRestartWindow(env: ValidatorEnv, opts: WaitOpts = {}): Promise<void> {
+export function cmdWaitForRestartWindow(env: ValidatorEnv, opts: WaitOpts = {}): string {
   const flags: string[] = [];
   if (opts.minIdleTime !== undefined) flags.push(`--min-idle-time ${opts.minIdleTime}`);
   if (opts.skipSnapshotCheck) flags.push('--skip-new-snapshot-check');
-  const cmd = `agave-validator -l ${env.ledger} wait-for-restart-window ${flags.join(' ')}`.trim();
+  return `agave-validator -l ${env.ledger} wait-for-restart-window ${flags.join(' ')}`.trim();
+}
+
+export async function waitForRestartWindow(env: ValidatorEnv, opts: WaitOpts = {}): Promise<void> {
+  const cmd = cmdWaitForRestartWindow(env, opts);
   const r = await exec(env.target, cmd);
   if (r.code !== 0) {
     throw new Error(`wait-for-restart-window failed (${r.code}): ${r.stderr || r.stdout}`);
@@ -25,13 +29,17 @@ export type SetIdentityOpts = {
   requireTower?: boolean;
 };
 
+export function cmdSetIdentity(env: ValidatorEnv, keyfileOnRemote: string, opts: SetIdentityOpts = {}): string {
+  const tower = opts.requireTower ? '--require-tower' : '';
+  return `agave-validator -l ${env.ledger} set-identity ${tower} ${keyfileOnRemote}`.trim();
+}
+
 export async function setIdentity(
   env: ValidatorEnv,
   keyfileOnRemote: string,
   opts: SetIdentityOpts = {}
 ): Promise<void> {
-  const tower = opts.requireTower ? '--require-tower' : '';
-  const cmd = `agave-validator -l ${env.ledger} set-identity ${tower} ${keyfileOnRemote}`.trim();
+  const cmd = cmdSetIdentity(env, keyfileOnRemote, opts);
   const r = await exec(env.target, cmd);
   if (r.code !== 0) {
     throw new Error(`set-identity failed (${r.code}): ${r.stderr || r.stdout}`);
