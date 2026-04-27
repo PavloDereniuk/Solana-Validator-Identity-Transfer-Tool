@@ -6,6 +6,7 @@ import { runChecks, type PreflightReport } from './core/preflight.js';
 import { buildSwapChecks } from './core/checks.js';
 import { executeSwap } from './core/swap.js';
 import { Auditor, defaultAuditPath, newSwapId } from './core/audit.js';
+import { watchCatchup, DEFAULT_WATCH } from './core/rollback.js';
 
 const program = new Command();
 
@@ -50,6 +51,9 @@ program
   .requiredOption('-c, --config <path>', 'swap config json')
   .option('--dry-run', 'print commands without executing')
   .option('--audit-log <path>', 'append-only jsonl audit file', defaultAuditPath())
+  .option('--no-rollback', 'disable post-swap catchup watcher and auto-rollback')
+  .option('--catchup-timeout <sec>', 'how long to wait for the new node to catch up', String(DEFAULT_WATCH.timeoutMs / 1000))
+  .option('--catchup-threshold <slots>', 'slots-behind threshold to count as caught up', String(DEFAULT_WATCH.slotThreshold))
   .action(async (opts) => {
     const cfg = await loadConfig(opts.config);
 
@@ -62,6 +66,8 @@ program
     }
 
     const audit = await Auditor.open(opts.auditLog, newSwapId());
+    const incidentPath = opts.auditLog.replace(/^audit-/, 'incident-');
+
     try {
       const { stakedPubkey } = await executeSwap(
         {
@@ -75,8 +81,57 @@ program
           onStep: (n, total, label) => console.log(`[${n}/${total}] ${label}...`),
         },
       );
-      console.log(`done. staked identity ${stakedPubkey} now active on secondary.`);
-      console.log(`audit: ${opts.auditLog} (swap ${audit.swapId})`);
+      console.log(`swap done. staked identity ${stakedPubkey} now active on secondary.`);
+
+      if (opts.rollback === false) {
+        console.log(`skipping catchup watcher (--no-rollback)`);
+        console.log(`audit: ${opts.auditLog} (swap ${audit.swapId})`);
+        return;
+      }
+
+      const watchOpts = {
+        timeoutMs: Number(opts.catchupTimeout) * 1000,
+        intervalMs: DEFAULT_WATCH.intervalMs,
+        slotThreshold: Number(opts.catchupThreshold),
+      };
+      console.log(`watching secondary catchup (timeout=${watchOpts.timeoutMs / 1000}s, threshold=${watchOpts.slotThreshold} slots)...`);
+      const watch = await watchCatchup(secondary.target, watchOpts);
+      await audit.write({
+        step: 'catchup-watch',
+        host: `${secondary.target.host}:${secondary.target.port}`,
+        message: `converged=${watch.converged} lastSlots=${watch.lastSlotsBehind} samples=${watch.samples}`,
+      });
+
+      if (watch.converged) {
+        console.log(`secondary caught up (${watch.lastSlotsBehind} slots behind).`);
+        console.log(`audit: ${opts.auditLog} (swap ${audit.swapId})`);
+        return;
+      }
+
+      console.error(`secondary did NOT catch up: ${watch.reason}`);
+      console.error(`rolling identity back to primary...`);
+      const incident = await Auditor.open(incidentPath, audit.swapId);
+      try {
+        await incident.write({ step: 'rollback-start', message: watch.reason });
+        await executeSwap(
+          {
+            from: secondary,
+            to: primary,
+            stakedKeyfile: cfg.identities.staked,
+            unstakedKeyfile: cfg.identities.unstaked,
+          },
+          {
+            audit: incident,
+            onStep: (n, total, label) => console.log(`[rollback ${n}/${total}] ${label}...`),
+          },
+        );
+        await incident.write({ step: 'rollback-complete' });
+        console.log(`rollback complete. primary holds the staked identity again.`);
+        console.log(`incident: ${incidentPath}`);
+        process.exit(2);
+      } finally {
+        await incident.close();
+      }
     } catch (e) {
       await audit.write({ step: 'swap-error', error: e instanceof Error ? e.message : String(e) });
       throw e;
