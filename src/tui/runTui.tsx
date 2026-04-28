@@ -5,19 +5,13 @@ import type { SwapConfig } from '../config.js';
 
 export type RunTuiOpts = {
   cfg: SwapConfig;
+  expectedStaked?: string;
 };
 
-function hostLabel(n: { user: string; host: string; port: number }): string {
-  return `${n.user}@${n.host}:${n.port}`;
-}
-
 export async function runTui(opts: RunTuiOpts): Promise<void> {
-  const { cfg } = opts;
+  const { cfg, expectedStaked } = opts;
   const inst = render(
-    <App
-      primaryHost={hostLabel(cfg.primary)}
-      secondaryHost={hostLabel(cfg.secondary)}
-    />
+    <App cfg={cfg} expectedStaked={expectedStaked} />
   );
   await inst.waitUntilExit();
 }
