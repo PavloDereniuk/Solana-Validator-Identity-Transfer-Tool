@@ -9,6 +9,7 @@ import { Auditor, defaultAuditPath, newSwapId } from './core/audit.js';
 import { watchCatchup, DEFAULT_WATCH } from './core/rollback.js';
 import { formatDryRun, formatPreflight } from './util/format.js';
 import { runInit } from './commands/init.js';
+import { swapWithTui } from './tui/swapWithTui.js';
 
 const program = new Command();
 
@@ -47,6 +48,7 @@ program
   .option('--catchup-threshold <slots>', 'slots-behind threshold to count as caught up', String(DEFAULT_WATCH.slotThreshold))
   .option('--skip-preflight', 'do not run preflight before the swap (not recommended)')
   .option('--preflight-min-score <n>', 'minimum preflight score required to proceed', '90')
+  .option('--tui', 'render the swap in an interactive ink dashboard')
   .action(async (opts) => {
     const cfg = await loadConfig(opts.config);
 
@@ -80,6 +82,29 @@ program
 
     const audit = await Auditor.open(opts.auditLog, newSwapId());
     const incidentPath = opts.auditLog.replace(/^audit-/, 'incident-');
+
+    if (opts.tui) {
+      const watchOpts = {
+        timeoutMs: Number(opts.catchupTimeout) * 1000,
+        intervalMs: DEFAULT_WATCH.intervalMs,
+        slotThreshold: Number(opts.catchupThreshold),
+      };
+      try {
+        const code = await swapWithTui({
+          cfg,
+          audit,
+          auditPath: opts.auditLog,
+          incidentPath,
+          enableRollback: opts.rollback !== false,
+          watch: watchOpts,
+        });
+        await audit.close();
+        process.exit(code);
+      } catch (e) {
+        await audit.close();
+        throw e;
+      }
+    }
 
     try {
       const { stakedPubkey } = await executeSwap(
