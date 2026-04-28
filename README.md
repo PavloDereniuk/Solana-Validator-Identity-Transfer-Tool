@@ -59,7 +59,7 @@ The swap command runs the standard four-step flow:
 
 1. wait for restart window on the primary
 2. set the primary to an unstaked identity
-3. transfer the tower file from primary to secondary over sftp
+3. base64-stream the tower file from primary to secondary
 4. set the staked identity on the secondary with `--require-tower`
 
 Tower filenames follow `tower-1_9-{pubkey}.bin`, same as a real validator.
