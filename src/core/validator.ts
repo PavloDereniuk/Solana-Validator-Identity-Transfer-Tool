@@ -30,8 +30,10 @@ export type SetIdentityOpts = {
 };
 
 export function cmdSetIdentity(env: ValidatorEnv, keyfileOnRemote: string, opts: SetIdentityOpts = {}): string {
-  const tower = opts.requireTower ? '--require-tower' : '';
-  return `agave-validator -l ${env.ledger} set-identity ${tower} ${keyfileOnRemote}`.trim();
+  const parts = ['agave-validator', '-l', env.ledger, 'set-identity'];
+  if (opts.requireTower) parts.push('--require-tower');
+  parts.push(keyfileOnRemote);
+  return parts.join(' ');
 }
 
 export async function setIdentity(

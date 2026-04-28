@@ -4,10 +4,10 @@ import { exec, type Target } from './core/ssh.js';
 import { loadConfig, nodeToTarget } from './config.js';
 import { runChecks } from './core/preflight.js';
 import { buildSwapChecks } from './core/checks.js';
-import { executeSwap } from './core/swap.js';
+import { executeSwap, planSwap, resolveStakedPubkey } from './core/swap.js';
 import { Auditor, defaultAuditPath, newSwapId } from './core/audit.js';
 import { watchCatchup, DEFAULT_WATCH } from './core/rollback.js';
-import { formatPreflight } from './util/format.js';
+import { formatDryRun, formatPreflight } from './util/format.js';
 
 const program = new Command();
 
@@ -52,7 +52,15 @@ program
     const secondary = { target: nodeToTarget(cfg.secondary), ledger: cfg.secondary.ledger };
 
     if (opts.dryRun) {
-      console.log('dry-run: not yet wired up. coming soon.');
+      const swapPlan = {
+        from: primary,
+        to: secondary,
+        stakedKeyfile: cfg.identities.staked,
+        unstakedKeyfile: cfg.identities.unstaked,
+      };
+      const stakedPubkey = await resolveStakedPubkey(swapPlan);
+      const steps = planSwap(swapPlan, { stakedPubkey });
+      process.stdout.write(formatDryRun(steps, stakedPubkey));
       return;
     }
 
