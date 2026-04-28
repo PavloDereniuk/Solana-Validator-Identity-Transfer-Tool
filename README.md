@@ -4,6 +4,26 @@ Transfer staked validator identity between two Solana nodes safely.
 
 WIP. Build: `npm i && npm run build`. Then `vid --help`.
 
+## Commands
+
+```
+vid init                              # interactive config wizard
+vid preflight --config swap-config.json
+vid swap      --config swap-config.json [--dry-run] [--tui]
+vid status    -H host -k path/to/key
+```
+
+`vid init` walks you through both nodes, asks where the keypairs live, and
+optionally probes ssh on each side before writing `swap-config.json`.
+
+`vid swap --dry-run` prints the exact shell commands the swap would run, with
+real paths and the resolved staked pubkey filled in. No agave-validator state
+is touched, so it's safe to do this on a live mainnet box.
+
+`vid swap --tui` runs the whole swap inside an ink dashboard — side-by-side
+panels for primary/secondary that poll identity + slot every 5s, a step
+progress list, and a live tail of the audit log.
+
 ## Local dev
 
 A two-validator mock environment lives in `docker/`. It runs two Ubuntu
@@ -38,3 +58,9 @@ The swap command runs the standard four-step flow:
 4. set the staked identity on the secondary with `--require-tower`
 
 Tower filenames follow `tower-1_9-{pubkey}.bin`, same as a real validator.
+
+For an interactive view of the same flow, add `--tui`:
+
+```
+node dist/cli.js swap --config docker/swap-config.example.json --tui
+```
