@@ -8,6 +8,7 @@ import { executeSwap, planSwap, resolveStakedPubkey } from './core/swap.js';
 import { Auditor, defaultAuditPath, newSwapId } from './core/audit.js';
 import { watchCatchup, DEFAULT_WATCH } from './core/rollback.js';
 import { formatDryRun, formatPreflight } from './util/format.js';
+import { runInit } from './commands/init.js';
 
 const program = new Command();
 
@@ -19,8 +20,9 @@ program
 program
   .command('init')
   .description('interactive config wizard')
-  .action(async () => {
-    console.log('init: not implemented yet');
+  .option('-o, --out <path>', 'where to write the config', 'swap-config.json')
+  .action(async (opts) => {
+    await runInit(opts.out);
   });
 
 program
