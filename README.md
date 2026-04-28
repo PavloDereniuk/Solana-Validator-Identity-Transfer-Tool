@@ -2,7 +2,12 @@
 
 Transfer staked validator identity between two Solana nodes safely.
 
-WIP. Build: `npm i && npm run build`. Then `vid --help`.
+WIP. Build: `npm i && npm run build`. Then `vid --help`. Українською:
+[README.ua.md](README.ua.md).
+
+If you've never done an identity swap before, read
+[docs/safety.md](docs/safety.md) first. It's the only doc here you should
+not skip.
 
 ## Commands
 
@@ -64,3 +69,24 @@ For an interactive view of the same flow, add `--tui`:
 ```
 node dist/cli.js swap --config docker/swap-config.example.json --tui
 ```
+
+## Tests
+
+```
+npm test
+```
+
+Covers the pure pieces: preflight scoring, `parseCatchup`, command
+builders, and `planSwap`. The SSH and TUI layers are exercised by hand
+against the docker mock pair.
+
+## Docs
+
+- [docs/safety.md](docs/safety.md) — slashing-prevention rationale, what
+  preflight catches, what `--require-tower` and auto-rollback actually
+  guarantee, and what they don't.
+- [docs/architecture.md](docs/architecture.md) — code layout and the
+  reasoning behind the non-obvious choices (sftp → exec/base64,
+  pre-flight runner vs checks, dry-run vs executor).
+- [docs/troubleshooting.md](docs/troubleshooting.md) — common operator
+  errors and how to recover.
