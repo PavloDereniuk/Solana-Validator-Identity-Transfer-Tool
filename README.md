@@ -10,7 +10,7 @@ not skip.
 ## Install
 
 ```
-npm i -g solana-validator-identity-transfer-tool
+npm i -g @solval/vid
 vid --help
 ```
 

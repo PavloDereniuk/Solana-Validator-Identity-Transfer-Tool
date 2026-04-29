@@ -20,7 +20,7 @@ demo / Pumpkin's Pool runbook) дає чотири послідовні крок
 ## Установка
 
 ```bash
-npm i -g solana-validator-identity-transfer-tool
+npm i -g @solval/vid
 vid --help
 ```
 

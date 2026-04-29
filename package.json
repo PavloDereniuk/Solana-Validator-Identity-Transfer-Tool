@@ -1,5 +1,5 @@
 {
-  "name": "solana-validator-identity-transfer-tool",
+  "name": "@solval/vid",
   "version": "0.1.0",
   "description": "Transfer staked Solana validator identity between two nodes safely.",
   "license": "MIT",
