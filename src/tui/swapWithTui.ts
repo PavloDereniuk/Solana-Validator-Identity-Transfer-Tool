@@ -12,10 +12,11 @@ export type SwapWithTuiOpts = {
   incidentPath: string;
   watch?: WatchOpts;
   enableRollback: boolean;
+  waitTimeoutMs?: number;
 };
 
 export async function swapWithTui(opts: SwapWithTuiOpts): Promise<number> {
-  const { cfg, audit, auditPath, incidentPath, enableRollback, watch: watchOpts } = opts;
+  const { cfg, audit, auditPath, incidentPath, enableRollback, watch: watchOpts, waitTimeoutMs } = opts;
 
   const primary = { target: nodeToTarget(cfg.primary),   ledger: cfg.primary.ledger };
   const secondary = { target: nodeToTarget(cfg.secondary), ledger: cfg.secondary.ledger };
@@ -41,6 +42,7 @@ export async function swapWithTui(opts: SwapWithTuiOpts): Promise<number> {
   try {
     await executeSwap(swapPlan, {
       audit,
+      waitTimeoutMs,
       onStep: (n, _total, _label) => {
         // mark the previous step as done
         if (n > 1) {

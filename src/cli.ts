@@ -48,6 +48,7 @@ program
   .option('--catchup-threshold <slots>', 'slots-behind threshold to count as caught up', String(DEFAULT_WATCH.slotThreshold))
   .option('--skip-preflight', 'do not run preflight before the swap (not recommended)')
   .option('--preflight-min-score <n>', 'minimum preflight score required to proceed', '90')
+  .option('--wait-timeout <sec>', 'max seconds to wait for restart-window before bailing', '600')
   .option('--tui', 'render the swap in an interactive ink dashboard')
   .action(async (opts) => {
     const cfg = await loadConfig(opts.config);
@@ -97,6 +98,7 @@ program
           incidentPath,
           enableRollback: opts.rollback !== false,
           watch: watchOpts,
+          waitTimeoutMs: Number(opts.waitTimeout) * 1000,
         });
         await audit.close();
         process.exit(code);
@@ -105,6 +107,8 @@ program
         throw e;
       }
     }
+
+    const waitTimeoutMs = Number(opts.waitTimeout) * 1000;
 
     try {
       const { stakedPubkey } = await executeSwap(
@@ -116,6 +120,7 @@ program
         },
         {
           audit,
+          waitTimeoutMs,
           onStep: (n, total, label) => console.log(`[${n}/${total}] ${label}...`),
         },
       );

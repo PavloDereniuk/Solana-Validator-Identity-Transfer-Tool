@@ -12,7 +12,7 @@
     "build": "tsc",
     "dev": "tsx src/cli.ts",
     "start": "node dist/cli.js",
-    "test": "node --import tsx --test tests/preflight.test.ts tests/rollback.test.ts tests/cmd.test.ts tests/swap.test.ts"
+    "test": "node --import tsx --test tests/preflight.test.ts tests/rollback.test.ts tests/cmd.test.ts tests/swap.test.ts tests/timeout.test.ts"
   },
   "engines": {
     "node": ">=20"

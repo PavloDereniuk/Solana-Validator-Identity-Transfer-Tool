@@ -8,6 +8,7 @@ import {
 import { transferTower, cmdReadTower, cmdWriteTower } from './tower.js';
 import type { Target } from './ssh.js';
 import type { Auditor } from './audit.js';
+import { withTimeout } from '../util/timeout.js';
 
 export type SwapEnd = {
   target: Target;
@@ -24,6 +25,7 @@ export type SwapPlan = {
 export type SwapHooks = {
   onStep?: (n: number, total: number, label: string) => void;
   audit?: Auditor;
+  waitTimeoutMs?: number;
 };
 
 export type StepLine = {
@@ -100,10 +102,14 @@ export async function executeSwap(plan: SwapPlan, hooks: SwapHooks = {}): Promis
   const steps = planSwap(plan, { stakedPubkey });
   const total = steps.length;
 
-  // TODO: bail out if wait-for-restart-window blocks for longer than something sane
   hooks.onStep?.(1, total, steps[0].label);
   const tWait = Date.now();
-  await waitForRestartWindow(from, { minIdleTime: 2, skipSnapshotCheck: true });
+  const waitTimeout = hooks.waitTimeoutMs ?? 600_000;
+  await withTimeout(
+    waitForRestartWindow(from, { minIdleTime: 2, skipSnapshotCheck: true }),
+    waitTimeout,
+    'wait-for-restart-window',
+  );
   await hooks.audit?.write({ step: 'wait-for-restart-window', host: hostOf(from.target), durationMs: Date.now() - tWait, exit: 0 });
 
   hooks.onStep?.(2, total, steps[1].label);
