@@ -15,8 +15,17 @@ const program = new Command();
 
 program
   .name('vid')
-  .description('Solana validator identity transfer')
-  .version('0.1.0');
+  .description('Safely transfer a staked Solana validator identity between two nodes.')
+  .version('0.1.0')
+  .addHelpText('after', `
+Typical flow:
+  vid init                              # one-time interactive setup
+  vid preflight --config swap-config.json
+  vid swap      --config swap-config.json --dry-run    # review the plan
+  vid swap      --config swap-config.json [--tui]      # do it
+
+See docs/safety.md before your first mainnet run.
+`);
 
 program
   .command('init')
