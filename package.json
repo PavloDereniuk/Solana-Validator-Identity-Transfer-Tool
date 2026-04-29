@@ -24,7 +24,7 @@
   ],
   "type": "module",
   "bin": {
-    "vid": "./dist/cli.js"
+    "vid": "dist/cli.js"
   },
   "files": [
     "dist",
