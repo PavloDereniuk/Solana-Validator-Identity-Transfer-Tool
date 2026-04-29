@@ -19,7 +19,9 @@ export class Auditor {
   constructor(private fh: FileHandle, public readonly swapId: string) {}
 
   static async open(path: string, swapId: string): Promise<Auditor> {
-    const fh = await open(path, 'a');
+    // 0o600 — operator only. audit lines reference key *paths* (not contents),
+    // but a world-readable log is still bad hygiene on a shared box.
+    const fh = await open(path, 'a', 0o600);
     return new Auditor(fh, swapId);
   }
 

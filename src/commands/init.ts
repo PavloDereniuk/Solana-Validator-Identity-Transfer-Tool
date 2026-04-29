@@ -109,7 +109,7 @@ export async function runInit(outPath: string): Promise<void> {
     console.log('');
   }
 
-  await writeFile(outPath, JSON.stringify(cfg, null, 2) + '\n', 'utf8');
-  console.log(`wrote ${outPath}.`);
+  await writeFile(outPath, JSON.stringify(cfg, null, 2) + '\n', { encoding: 'utf8', mode: 0o600 });
+  console.log(`wrote ${outPath} (0600).`);
   console.log(`next: ${chalk.cyan(`vid preflight --config ${outPath}`)}`);
 }
