@@ -91,6 +91,8 @@ node dist/cli.js swap --config docker/swap-config.example.json
 
 - [docs/safety.md](docs/safety.md) — як саме preflight + `--require-tower`
   + auto-rollback захищають від slashing'у, і чого вони НЕ покривають.
+- [docs/security.md](docs/security.md) — як `vid` обходиться з ключами і
+  SSH-кредами, що пишеться в audit log, threat model.
 - [docs/architecture.md](docs/architecture.md) — як організований код,
   чому TS/Node, де додавати нові чеки чи новий validator client.
 - [docs/troubleshooting.md](docs/troubleshooting.md) — типові помилки

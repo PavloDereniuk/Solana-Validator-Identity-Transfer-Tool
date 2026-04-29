@@ -85,6 +85,8 @@ against the docker mock pair.
 - [docs/safety.md](docs/safety.md) — slashing-prevention rationale, what
   preflight catches, what `--require-tower` and auto-rollback actually
   guarantee, and what they don't.
+- [docs/security.md](docs/security.md) — how `vid` handles your keypair
+  paths and SSH key, what ends up in the audit log, threat model.
 - [docs/architecture.md](docs/architecture.md) — code layout and the
   reasoning behind the non-obvious choices (sftp → exec/base64,
   pre-flight runner vs checks, dry-run vs executor).
