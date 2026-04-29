@@ -1,13 +1,29 @@
 # Solana Validator Identity Transfer Tool
 
 Transfer staked validator identity between two Solana nodes safely.
-
-WIP. Build: `npm i && npm run build`. Then `vid --help`. Українською:
-[README.ua.md](README.ua.md).
+Українською: [README.ua.md](README.ua.md).
 
 If you've never done an identity swap before, read
 [docs/safety.md](docs/safety.md) first. It's the only doc here you should
 not skip.
+
+## Install
+
+```
+npm i -g solana-validator-identity-transfer-tool
+vid --help
+```
+
+Or from a clone:
+
+```
+git clone https://github.com/PavloDereniuk/Solana-Validator-Identity-Transfer-Tool.git
+cd Solana-Validator-Identity-Transfer-Tool
+npm i && npm run build
+node dist/cli.js --help
+```
+
+Requires Node 20+.
 
 ## Commands
 

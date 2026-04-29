@@ -17,11 +17,27 @@ demo / Pumpkin's Pool runbook) дає чотири послідовні крок
 у форматі JSONL, та auto-rollback, якщо нова нода не встигає наздогнати
 кластер.
 
+## Установка
+
+```bash
+npm i -g solana-validator-identity-transfer-tool
+vid --help
+```
+
+Або з клона:
+
+```bash
+git clone https://github.com/PavloDereniuk/Solana-Validator-Identity-Transfer-Tool.git
+cd Solana-Validator-Identity-Transfer-Tool
+npm i && npm run build
+node dist/cli.js --help
+```
+
+Потрібен Node 20+.
+
 ## Швидкий старт
 
 ```bash
-npm i && npm run build
-
 vid init                              # інтерактивний майстер конфіга
 vid preflight --config swap-config.json
 vid swap      --config swap-config.json [--dry-run] [--tui]
