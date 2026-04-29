@@ -21,7 +21,9 @@ export async function waitForRestartWindow(env: ValidatorEnv, opts: WaitOpts = {
   const cmd = cmdWaitForRestartWindow(env, opts);
   const r = await exec(env.target, cmd);
   if (r.code !== 0) {
-    throw new Error(`wait-for-restart-window failed (${r.code}): ${r.stderr || r.stdout}`);
+    throw new Error(
+      `wait-for-restart-window on ${env.target.host}:${env.target.port} exited ${r.code}: ${r.stderr || r.stdout}`,
+    );
   }
 }
 
@@ -44,14 +46,18 @@ export async function setIdentity(
   const cmd = cmdSetIdentity(env, keyfileOnRemote, opts);
   const r = await exec(env.target, cmd);
   if (r.code !== 0) {
-    throw new Error(`set-identity failed (${r.code}): ${r.stderr || r.stdout}`);
+    throw new Error(
+      `set-identity on ${env.target.host}:${env.target.port} exited ${r.code}: ${r.stderr || r.stdout}`,
+    );
   }
 }
 
 export async function getPubkey(target: Target, keyfileOnRemote: string): Promise<string> {
   const r = await exec(target, `solana address -k ${keyfileOnRemote}`);
   if (r.code !== 0) {
-    throw new Error(`solana address failed: ${r.stderr || r.stdout}`);
+    throw new Error(
+      `solana address -k ${keyfileOnRemote} on ${target.host} failed: ${r.stderr || r.stdout}`,
+    );
   }
   return r.stdout.trim();
 }
@@ -59,7 +65,7 @@ export async function getPubkey(target: Target, keyfileOnRemote: string): Promis
 export async function catchupStatus(target: Target): Promise<string> {
   const r = await exec(target, 'solana catchup --our-localhost');
   if (r.code !== 0) {
-    throw new Error(`catchup failed: ${r.stderr || r.stdout}`);
+    throw new Error(`solana catchup on ${target.host} failed: ${r.stderr || r.stdout}`);
   }
   return r.stdout.trim();
 }
