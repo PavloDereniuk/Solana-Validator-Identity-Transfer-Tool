@@ -121,14 +121,16 @@ export function towerPresent(t: Target, ledger: string, stakedKeyfile: string): 
       }
       const pub = a.stdout.trim();
       const file = `${ledger}/${towerFilename(pub)}`;
-      const r = await exec(t, `test -f ${file} && echo ok`);
+      // -s also catches the zero-byte case (mid-write, truncated, etc).
+      const r = await exec(t, `test -s ${file} && wc -c < ${file}`);
       if (r.code === 0) {
-        return { level: 'pass', message: `${towerFilename(pub)} present` };
+        const size = Number(r.stdout.trim()) || 0;
+        return { level: 'pass', message: `${towerFilename(pub)} present (${size}B)` };
       }
       return {
         level: 'fail',
-        message: `tower file missing on primary: ${file}`,
-        detail: 'without a tower the secondary cannot resume voting safely',
+        message: `tower file missing or empty on primary: ${file}`,
+        detail: 'without a non-empty tower the secondary cannot resume voting safely',
       };
     },
   };

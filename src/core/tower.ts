@@ -27,6 +27,12 @@ export async function transferTower(
     throw new Error(`read tower from primary failed: ${r.stderr || r.stdout}`);
   }
   const b64 = r.stdout.trim();
+  if (b64.length === 0) {
+    // either the file is zero bytes (pre-flight should have caught this),
+    // or base64 produced no output for some other reason. either way we
+    // refuse — pushing an empty tower forward is worse than not swapping.
+    throw new Error(`refused: tower file at ${fromLedger}/tower-1_9-${pubkey}.bin is empty`);
+  }
 
   const w = await exec(to, cmdWriteTower(toLedger, pubkey), b64);
   if (w.code !== 0) {
