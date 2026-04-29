@@ -3,16 +3,42 @@
   "version": "0.1.0",
   "description": "Transfer staked Solana validator identity between two nodes safely.",
   "license": "MIT",
-  "private": true,
+  "author": "Pavlo Dereniuk",
+  "homepage": "https://github.com/PavloDereniuk/Solana-Validator-Identity-Transfer-Tool",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PavloDereniuk/Solana-Validator-Identity-Transfer-Tool.git"
+  },
+  "bugs": {
+    "url": "https://github.com/PavloDereniuk/Solana-Validator-Identity-Transfer-Tool/issues"
+  },
+  "keywords": [
+    "solana",
+    "validator",
+    "identity",
+    "swap",
+    "agave",
+    "slashing",
+    "devops",
+    "cli"
+  ],
   "type": "module",
   "bin": {
     "vid": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "README.ua.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
     "start": "node dist/cli.js",
-    "test": "node --import tsx --test tests/preflight.test.ts tests/rollback.test.ts tests/cmd.test.ts tests/swap.test.ts tests/timeout.test.ts"
+    "test": "node --import tsx --test tests/preflight.test.ts tests/rollback.test.ts tests/cmd.test.ts tests/swap.test.ts tests/timeout.test.ts",
+    "prepublishOnly": "npm run build && npm test"
   },
   "engines": {
     "node": ">=20"
